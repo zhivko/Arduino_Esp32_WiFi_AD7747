@@ -1,4 +1,4 @@
-# Arduino_Esp32_WiFi_Oled - Lolin32 & AD7747
+# D-duino-32(ESP32&0.96OLED display) & AD7747
 
 This is simple Arduino 1.8 sketch that runs on https://www.tindie.com/products/lspoplove/d-duino-32esp32-and-096oled-display/
 and uses graphic arduino lib for oled: https://github.com/squix78/esp8266-oled-ssd1306
