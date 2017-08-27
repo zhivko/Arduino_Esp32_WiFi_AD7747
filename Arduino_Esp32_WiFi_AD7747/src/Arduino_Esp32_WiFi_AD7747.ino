@@ -85,6 +85,66 @@
 
   void i2cloop(void *pvParameters)
   {
+
+
+
+    display.init();
+  	display.flipScreenVertically();
+  	display.setTextAlignment(TEXT_ALIGN_LEFT);
+  	display.setFont(ArialMT_Plain_16);
+
+    Wire.begin(5,4,400000);                   //sets up i2c for operation
+     Wire.beginTransmission(0x48);
+     Wire.write(0xBF);
+     Wire.write(0x00);
+     Wire.endTransmission();
+     delay(4);
+     Wire.beginTransmission(0x48);   // begins write cycle
+     Wire.write(0x07);              //address pointer for cap setup register
+     Wire.write(0xA0);              //b'10100000' found from datasheet page 16
+     Wire.endTransmission();        //ends write cycle
+     delay(4);                      // Wait for data to clock out? I'm not 100% sure why this delay is here (or why it's 4ms)
+
+     //temperature compensation
+ /*
+     Wire.beginTransmission(0x48);   // begins write cycle
+     Wire.write(0x08);              //address pointer for temp setup register
+     Wire.write(B10000000);
+     Wire.endTransmission();        //ends write cycle
+     delay(4);                      // Wait for data to clock out? I'm not 100% sure why this delay is here (or why it's 4ms)
+ */
+
+     Wire.beginTransmission(0x48);   //begins transmission again
+     Wire.write(0x09);              //address pointer for capacitive channel excitation register
+     Wire.write(B00001111);
+     //Wire.write(0x0E);              //recommended value from datasheet
+     Wire.endTransmission();
+     delay(4);
+
+     Wire.beginTransmission(0x48);
+     Wire.write(0x0A);              //address pointer for the configuration register
+     //Wire.write(0x21);              //b'00100001' for continuous conversion, arbitrary VTF setting, and mid-range capacitive conversion time
+     Wire.write(B01000001);              //b'00100001' for continuous conversion, arbitrary VTF setting, and mid-range capacitive conversion time
+     Wire.endTransmission();
+     delay(4);
+
+     Wire.beginTransmission(0x48);
+     Wire.write(0x0B);              //CAP DAC A Register address (Positive pin data)
+     Wire.write(0x80);               //b'10111111' for enable Cap DAC A
+     Wire.endTransmission();
+     delay(4); 
+
+
+    while(1)
+  {
+
+
+
+
+
+
+
+
     Wire.beginTransmission(0x48);   //talking to chip
     Wire.write(byte(0x00));                  //status register address
     Wire.endTransmission();
@@ -127,48 +187,14 @@
      //Serial.println();
     }
   }
+}
 
 
   void setup()
   {
     Serial.begin(115200);             // we will monitor this via serial cable
 
-    display.init();
-  	display.flipScreenVertically();
-  	display.setTextAlignment(TEXT_ALIGN_LEFT);
-  	display.setFont(ArialMT_Plain_16);
 
-    Wire.begin(5,4,400000);                   //sets up i2c for operation
-    Wire.beginTransmission(0x48);
-    Wire.write(0xBF);
-    Wire.write(0x00);
-    Wire.endTransmission();
-    delay(4);
-    Wire.beginTransmission(0x48);   // begins write cycle
-    Wire.write(0x07);              //address pointer for cap setup register
-    Wire.write(0xA0);              //b'10100000' found from datasheet page 16
-    Wire.endTransmission();        //ends write cycle
-    delay(4);                      // Wait for data to clock out? I'm not 100% sure why this delay is here (or why it's 4ms)
-
-    Wire.beginTransmission(0x48);   // begins write cycle
-    Wire.write(0x08);              //address pointer for temp setup register
-    Wire.write(B10000000);              //b'10000000' found from datasheet page 16
-    Wire.endTransmission();        //ends write cycle
-    delay(4);                      // Wait for data to clock out? I'm not 100% sure why this delay is here (or why it's 4ms)
-
-    Wire.beginTransmission(0x48);   //begins transmission again
-    Wire.write(0x09);              //address pointer for capacitive channel excitation register
-    Wire.write(0x0E);              //recommended value from datasheet
-    Wire.endTransmission();
-    delay(4);
-    Wire.beginTransmission(0x48);
-    Wire.write(0x0A);              //address pointer for the configuration register
-    Wire.write(0x21);              //b'00100001' for continuous conversion, arbitrary VTF setting, and mid-range capacitive conversion time
-    Wire.endTransmission();
-    Wire.beginTransmission(0x48);
-    Wire.write(0x0B);              //CAP DAC A Register address (Positive pin data)
-    Wire.write(0x80);               //b'10111111' for enable Cap DAC A
-    Wire.endTransmission();
     Serial.println("Setup ended.");        //test to make sure serial connection is working
 
     USE_SERIAL.setDebugOutput(true);
@@ -203,8 +229,11 @@
   {
     webSocket.loop();
     if(ipClient != IPAddress(0,0,0,0))
-      webSocket.broadcastTXT("Analogue 3.2");
-
+    {
+      char result[25];
+      sprintf( result, "Analogue %s", charBuf );
+      webSocket.broadcastTXT(result);
+    }
     //Serial.println("Loop Done");
     //Serial.println("  ");
     //delay(1000);

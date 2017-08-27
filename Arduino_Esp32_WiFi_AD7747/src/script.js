@@ -2,6 +2,8 @@
 	  var websocket;
 	  
 	  var output;
+	  
+	  var preEvtData;
 
 		function searchKeyPress2(e)
 		{
@@ -56,7 +58,7 @@
 		websocket.onopen = function(evt) { onOpen(evt) };
 		websocket.onclose = function(evt) { onClose(evt) };
 		websocket.onmessage = function(evt) { onMessage(evt) };
-		websocket.onerror = function(evt) { onError(evt) };		
+		websocket.onerror = function(evt) { onError(evt) };
 	  }
 	  function onOpen(evt)
 	  {
@@ -72,27 +74,32 @@
 	  }
 	  function onMessage(evt)
 	  {
-		writeToScreen('<span style="color: blue;">Time: ' + ((new Date()).getTime()-currentTimeMs) +'ms Received: ' + evt.data+'</span>');
-		var res = evt.data.split(' ');
-		if (evt.data.slice(0,1) == 'X' && res.length==5)
-		{
-			document.getElementById("roseSvg").contentDocument.getElementById('PositionX').textContent = res[0];
-			document.getElementById("roseSvg").contentDocument.getElementById('PositionY').textContent = res[1];
-			document.getElementById("roseSvg").contentDocument.getElementById('PositionZ').textContent = res[2];
-			document.getElementById("roseSvg").contentDocument.getElementById('PositionE').textContent = res[3];
-			if(endsWith(res[4],"1"))
-				document.getElementById("enableMotors").checked="checked";
-			else
-				document.getElementById("enableMotors").checked="";
+		  
+		if(evt.data != preEvtData)
+		{		  
+			writeToScreen('<span style="color: blue;">Time: ' + ((new Date()).getTime()-currentTimeMs) +'ms Received: ' + evt.data+'</span>');
+			var res = evt.data.split(' ');
+			if (evt.data.slice(0,1) == 'X' && res.length==5)
+			{
+				document.getElementById("roseSvg").contentDocument.getElementById('PositionX').textContent = res[0];
+				document.getElementById("roseSvg").contentDocument.getElementById('PositionY').textContent = res[1];
+				document.getElementById("roseSvg").contentDocument.getElementById('PositionZ').textContent = res[2];
+				document.getElementById("roseSvg").contentDocument.getElementById('PositionE').textContent = res[3];
+				if(endsWith(res[4],"1"))
+					document.getElementById("enableMotors").checked="checked";
+				else
+					document.getElementById("enableMotors").checked="";
+			}
+			else if(evt.data.slice(0,8) == 'Analogue')
+			{
+				document.getElementById('Analogue').textContent = res[1];
+			}
+			else if(evt.data.slice(0,7) == 'Encoder')
+			{
+				document.getElementById('Encoder').textContent = res[1];
+			}
 		}
-		else if(evt.data.slice(0,8) == 'Analogue')
-		{
-			document.getElementById('Analogue').textContent = res[1];
-		}
-		else if(evt.data.slice(0,7) == 'Encoder')
-		{
-			document.getElementById('Encoder').textContent = res[1];
-		}
+		preEvtData = evt.data; 
 	  }
 	  function onError(evt)
 	  {
